@@ -1,17 +1,28 @@
 package ch.mobpro.vibra;
 
 import android.app.Activity;
+import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.os.Environment;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.MediaController;
+
+import java.io.File;
 
 
 public class MainActivity extends Activity {
+    private static File musicFile;
+    private static File musicFolder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        createMusicDirectory();
+        play();
     }
 
 
@@ -35,5 +46,22 @@ public class MainActivity extends Activity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public void createMusicDirectory() {
+        musicFolder = new File(Environment.getExternalStorageDirectory(), "music");
+        musicFolder.mkdirs();
+    }
+
+    public void play() {
+        MediaPlayer mp = new MediaPlayer();
+
+        try {
+            mp.setDataSource(musicFolder.getAbsolutePath()+"/colour_haze_-_aquamaria.mp3");
+            mp.prepare();
+            mp.start();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
