@@ -59,6 +59,7 @@ public class MainActivity extends Activity {
 
     @Override
     public void onResume() {
+        super.onResume();
         getMusicService();
     }
 
@@ -67,7 +68,7 @@ public class MainActivity extends Activity {
         musicFolder.mkdirs();
     }
 
-    public void playOnclick(View v) {
+    public void playOnClick(View v) {
         if (musicFiles != null) {
             musicService.play(musicFiles);
         } else {
