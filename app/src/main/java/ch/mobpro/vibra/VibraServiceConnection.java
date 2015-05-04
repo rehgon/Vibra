@@ -24,7 +24,7 @@ public class VibraServiceConnection implements ServiceConnection {
         mBound = false;
     }
 
-    public VibraMusicService getMService() {
+    public VibraMusicService getMusicService() {
         return mService;
     }
 

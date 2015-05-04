@@ -23,17 +23,11 @@ public class VibraMusicService extends Service  {
         mp = new MediaPlayer();
     }
 
+    //@todo: Titel nacheinander abspielen
     public void play(Collection<File> musicFiles) {
         try {
             VibraPlayMusicTask playTask = new VibraPlayMusicTask();
             for (File musicFile : musicFiles) {
-
-                //warten falls Stück noch am Spielen ist
-                while (mp.isPlaying()) {
-                    Thread.sleep(1000);
-                }
-
-                //
                 playTask.execute(musicFile);
             }
         } catch (Exception e) {
@@ -69,7 +63,11 @@ public class VibraMusicService extends Service  {
     }
 
     public void pause() {
-        mp.pause();
+        if (mp.isPlaying()) {
+            mp.pause();
+        } else {
+            mp.start();
+        }
     }
 
     public void resetMediaPlayer() {
