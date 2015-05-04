@@ -1,17 +1,20 @@
 package ch.mobpro.vibra;
 
 import android.app.Activity;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 import java.io.File;
+import java.util.Collection;
 
 
 public class MainActivity extends Activity {
-    private static File musicFile;
+    private static Collection<File> musicFiles;
     private static File musicFolder;
     private static VibraMusicService musicService;
     private static final String MUSIC_FOLDER_NAME = "vibra_music";
@@ -64,15 +67,23 @@ public class MainActivity extends Activity {
         musicFolder.mkdirs();
     }
 
-    public void play() {
-        if (musicFile != null) {
-            musicService.play(musicFile);
+    public void playOnclick(View v) {
+        if (musicFiles != null) {
+            musicService.play(musicFiles);
         } else {
             Log.i("custom Vibra error", "Music File is null");
         }
     }
 
-    public void setMusicFile(File musicFile) {
-        this.musicFile = musicFile;
+    public void pauseOnClick(View v) {
+        musicService.pause();
+    }
+
+    public void browseOnClick(View v) {
+
+    }
+
+    public void setMusicFile(Collection<File> musicFiles) {
+        this.musicFiles = musicFiles;
     }
 }

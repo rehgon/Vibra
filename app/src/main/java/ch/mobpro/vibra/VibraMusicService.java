@@ -10,6 +10,7 @@ import android.util.Log;
 import android.widget.MediaController.MediaPlayerControl;
 
 import java.io.File;
+import java.util.Collection;
 
 /**
  * Created by remo on 04.05.2015.
@@ -22,10 +23,19 @@ public class VibraMusicService extends Service  {
         mp = new MediaPlayer();
     }
 
-    public void play(File musicFile) {
+    public void play(Collection<File> musicFiles) {
         try {
             VibraPlayMusicTask playTask = new VibraPlayMusicTask();
-            playTask.execute(musicFile);
+            for (File musicFile : musicFiles) {
+
+                //warten falls Stück noch am Spielen ist
+                while (mp.isPlaying()) {
+                    Thread.sleep(1000);
+                }
+
+                //
+                playTask.execute(musicFile);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -46,6 +56,8 @@ public class VibraMusicService extends Service  {
                     mp.prepare();
                     mp.start();
 
+                    Log.i("progress", mp.getCurrentPosition() + "");
+
                     break;
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -54,6 +66,20 @@ public class VibraMusicService extends Service  {
 
             return null;
         }
+    }
+
+    public void pause() {
+        mp.pause();
+    }
+
+    public void resetMediaPlayer() {
+        mp.release();
+        mp = null;
+    }
+
+    @Override
+    public void onDestroy() {
+        resetMediaPlayer();
     }
 
     @Override
