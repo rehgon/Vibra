@@ -1,13 +1,11 @@
 package ch.mobpro.vibra;
 
 import android.app.Activity;
-import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.MediaController;
 
 import java.io.File;
 
@@ -15,6 +13,15 @@ import java.io.File;
 public class MainActivity extends Activity {
     private static File musicFile;
     private static File musicFolder;
+    private static VibraMusicService musicService;
+    private static final String MUSIC_FOLDER_NAME = "vibra_music";
+
+    public VibraMusicService getMusicService() {
+        if (musicService == null) {
+            musicService = new VibraMusicService();
+        }
+        return musicService;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,7 +29,6 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
 
         createMusicDirectory();
-        play();
     }
 
 
@@ -48,20 +54,25 @@ public class MainActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    public void onResume() {
+        getMusicService();
+    }
+
     public void createMusicDirectory() {
-        musicFolder = new File(Environment.getExternalStorageDirectory(), "music");
+        musicFolder = new File(Environment.getExternalStorageDirectory(), MUSIC_FOLDER_NAME);
         musicFolder.mkdirs();
     }
 
     public void play() {
-        MediaPlayer mp = new MediaPlayer();
-
-        try {
-            mp.setDataSource(musicFolder.getAbsolutePath()+"/colour_haze_-_aquamaria.mp3");
-            mp.prepare();
-            mp.start();
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (musicFile != null) {
+            musicService.play(musicFile);
+        } else {
+            Log.i("custom Vibra error", "Music File is null");
         }
+    }
+
+    public void setMusicFile(File musicFile) {
+        this.musicFile = musicFile;
     }
 }

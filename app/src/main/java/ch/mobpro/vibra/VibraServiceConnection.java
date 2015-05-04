@@ -13,7 +13,7 @@ public class VibraServiceConnection implements ServiceConnection {
 
     @Override
     public void onServiceConnected(ComponentName name, IBinder service) {
-        VibraMusicService.LocalBinder binder = (VibraMusicService.LocalBinder) service;
+        VibraMusicService.VibraServiceBinder binder = (VibraMusicService.VibraServiceBinder) service;
         mService = binder.getService();
         mBound = true;
     }
