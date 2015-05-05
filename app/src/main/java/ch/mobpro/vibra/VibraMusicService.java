@@ -1,6 +1,7 @@
 package ch.mobpro.vibra;
 
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.AsyncTask;
@@ -10,26 +11,69 @@ import android.util.Log;
 import android.widget.MediaController.MediaPlayerControl;
 
 import java.io.File;
+import java.io.FileDescriptor;
+import java.util.ArrayList;
 import java.util.Collection;
 
 /**
  * Created by remo on 04.05.2015.
  */
-public class VibraMusicService extends Service  {
-    private final IBinder mBinder = new VibraServiceBinder();
-    private static MediaPlayer mp;
+public class VibraMusicService extends Service  implements MediaPlayer.OnCompletionListener {
+    private IBinder mBinder = new VibraServiceBinder();
+    private static MediaPlayer mp = new MediaPlayer();
+    private VibraPlayMusicTask task;
+    private ArrayList<File> playList;
+    int current_index = 0;
 
-    public VibraMusicService() {
-        mp = new MediaPlayer();
+    public class VibraServiceBinder extends Binder {
+        public VibraMusicService getService() {
+            return VibraMusicService.this;
+        }
     }
 
-    //@todo: Titel nacheinander abspielen
-    public void play(Collection<File> musicFiles) {
+    @Override
+    public IBinder onBind(Intent intent) {
+        return mBinder;
+    }
+
+    public boolean isPlaying() {
+        return mp.isPlaying();
+    }
+
+    public void start() {
+        if (!isPlaying()) {
+            mp.start();
+        }
+    }
+
+    public void pause() {
+        if (isPlaying()) {
+            mp.pause();
+        }
+    }
+
+    public void setPlayList(ArrayList<File> musicFiles) {
+        playList = musicFiles;
+        current_index = 0;
+    }
+
+    public int getTrackIndex() {
+        return current_index;
+    }
+
+    public void preparePlayer(int trackNr) {
+        current_index = trackNr % playList.size();
+
         try {
-            VibraPlayMusicTask playTask = new VibraPlayMusicTask();
-            for (File musicFile : musicFiles) {
-                playTask.execute(musicFile);
+            if (task == null) {
+                task = new VibraPlayMusicTask();
+            } else {
+                task.cancel(true);
             }
+
+            task.execute(playList.get(current_index));
+        } catch (ArrayIndexOutOfBoundsException e ) {
+            Log.e("Vibra Service Error","Track index out of bounds");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -42,53 +86,40 @@ public class VibraMusicService extends Service  {
     }
 
     private final class VibraPlayMusicTask extends AsyncTask<File, Void, Void> {
+        private boolean running = true;
+
         @Override
         protected Void doInBackground(File... musicFiles) {
-            for (File musicFile : musicFiles) {
-                try {
-                    mp.setDataSource(musicFile.getAbsolutePath());
-                    mp.prepare();
-                    mp.start();
+            File musicFile = musicFiles[0];
 
-                    Log.i("progress", mp.getCurrentPosition() + "");
+            try {
+                mp = new MediaPlayer();
+                mp.setDataSource(musicFile.getAbsolutePath());
+                mp.prepare();
 
-                    break;
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                Log.i("progress", mp.getCurrentPosition() + "");
+            } catch (Exception e) {
+                e.printStackTrace();
             }
 
             return null;
         }
-    }
 
-    public void pause() {
-        if (mp.isPlaying()) {
-            mp.pause();
-        } else {
-            mp.start();
+        @Override
+        protected void onCancelled() {
+            mp.stop();
         }
     }
 
-    public void resetMediaPlayer() {
-        mp.release();
-        mp = null;
+    @Override
+    public void onCompletion(MediaPlayer mp) {
+        preparePlayer(++current_index % playList.size());
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        resetMediaPlayer();
-    }
-
-    @Override
-    public IBinder onBind(Intent intent) {
-        return mBinder;
-    }
-
-    public class VibraServiceBinder extends Binder {
-        public VibraMusicService getService() {
-            return VibraMusicService.this;
-        }
+        mp.release();
+        mp = null;
     }
 }

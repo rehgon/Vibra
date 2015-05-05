@@ -1,35 +1,36 @@
 package ch.mobpro.vibra;
 
 import android.app.Activity;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.SoundEffectConstants;
 import android.view.View;
+import android.widget.Button;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.ServiceConfigurationError;
 
 
 public class MainActivity extends Activity {
-    private static Collection<File> musicFiles;
+    private static ArrayList<File> musicFiles;
     private static File musicFolder;
     private static VibraMusicService musicService;
-    private static VibraServiceConnection mConnection;
-    private static Binder mBinder;
+    private static boolean mBound = false;
     private static final String MUSIC_FOLDER_NAME = "vibra_music";
-
-    public VibraMusicService getMusicService() {
-        if (musicService == null) {
-            musicService = new VibraMusicService();
-        }
-        return musicService;
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,8 +38,31 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
 
         createMusicDirectory();
+
+        debugCreateMusicFiles();
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        Intent intent = new Intent(this, VibraMusicService.class);
+        bindService(intent, vibraServiceConnection, Context.BIND_AUTO_CREATE);
+
+        Log.i("Vibra custom Message","onStart()");
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        Log.i("Vibra custom Message","onStop()");
+
+        if(mBound) {
+            unbindService(vibraServiceConnection);
+            mBound = false;
+        }
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -62,24 +86,16 @@ public class MainActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        mConnection = new VibraServiceConnection();
+    /* Temporär zum testen: arraylist mit Music-File Objekten */
+    public void debugCreateMusicFiles() {
+        ArrayList<File> files = new ArrayList<>();
+        files.add(new File(musicFolder.getAbsolutePath(),"colour_haze_aquamaria.mp3"));
 
-        Intent intent = new Intent(this, VibraMusicService.class);
-        bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
-    }
+        for (File file : files) {
+            Log.i("file",file.getAbsolutePath());
+        }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        getMusicService();
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
+        musicFiles = files;
     }
 
     public void createMusicDirectory() {
@@ -87,23 +103,61 @@ public class MainActivity extends Activity {
         musicFolder.mkdirs();
     }
 
-    public void playOnClick(View v) {
-        if (musicFiles != null) {
-            musicService.play(musicFiles);
-        } else {
-            Log.i("custom Vibra error", "Music File is null");
+    private ServiceConnection vibraServiceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            VibraMusicService.VibraServiceBinder binder = (VibraMusicService.VibraServiceBinder) service;
+            musicService = binder.getService();
+            mBound = true;
+            if (musicFiles != null) {
+                musicService.setPlayList(musicFiles);
+                musicService.preparePlayer(0);
+            } else {
+                Log.e("Vibra error","No Music Files");
+            }
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            mBound = false;
+        }
+    };
+
+
+    /* onClick Events */
+
+    public void startStopOnClick(View v) {
+        Button playButton = (Button) v;
+
+        try {
+            if (musicFiles == null) { throw new FileNotFoundException("Music File is null"); }
+            if (!mBound) { throw new ServiceConfigurationError("not Bound"); }
+
+            if(!musicService.isPlaying()) {
+                musicService.start();
+                ((Button) v).setText("Pause");
+            } else {
+                musicService.pause();
+                ((Button) v).setText("Play");
+            }
+        } catch (ServiceConfigurationError e) {
+            Log.e("Vibra Error",e.getMessage());
+        } catch (FileNotFoundException e) {
+            Log.e("Vibra Error",e.getMessage());
         }
     }
 
-    public void pauseOnClick(View v) {
-        musicService.pause();
+    public void nextOnClick(View v) {
+        musicService.preparePlayer(musicService.getTrackIndex() + 1);
+        Log.i("Player msg","next track");
+    }
+
+    public void prevOnClick(View v) {
+        musicService.preparePlayer(musicService.getTrackIndex() - 1);
+        Log.i("Player msg","previous track");
     }
 
     public void browseOnClick(View v) {
 
-    }
-
-    public void setMusicFile(Collection<File> musicFiles) {
-        this.musicFiles = musicFiles;
     }
 }
