@@ -4,23 +4,36 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TabHost;
 
 /**
  * Created by Matthias on 04.05.2015.
  */
-public class MusicBrowserActivity extends Activity{
+public class MusicBrowserActivity extends Activity {
+
+    private TabHost tabHost;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.music_browser);
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
+        tabHost = (TabHost) findViewById(R.id.TabHost);
+        tabHost.setup();
+        // tab1
+        TabHost.TabSpec spec1 = tabHost.newTabSpec("tab_creation");
+        spec1.setIndicator("Interpreten", getResources().getDrawable(android.R.drawable.ic_menu_add));
+        spec1.setContent(R.id.onglet1);
+        tabHost.addTab(spec1);
+        //tab2
+        TabHost.TabSpec spec2 = tabHost.newTabSpec("tab_creation");
+        spec2.setIndicator("Alben", getResources().getDrawable(android.R.drawable.ic_menu_add));
+        spec2.setContent(R.id.onglet1);
+        tabHost.addTab(spec2);
+        //tab3
+        TabHost.TabSpec spec3 = tabHost.newTabSpec("tab_creation");
+        spec3.setIndicator("Titel",getResources().getDrawable(android.R.drawable.ic_menu_add));
+        spec3.setContent(R.id.onglet1);
+        tabHost.addTab(spec3);
     }
 
     @Override
