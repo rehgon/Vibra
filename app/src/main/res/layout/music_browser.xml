@@ -33,7 +33,7 @@
                 <!-- tab N°2 -->
                 <!-- Inclusion of the interface -->
                 <include
-                    android:id="@+id/Onglet2"
+                    android:id="@+id/onglet2"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     layout="@layout/alben" >
@@ -41,7 +41,7 @@
                 <!-- tab N°3 -->
                 <!-- Inclusion of the interface -->
                 <include
-                    android:id="@+id/Onglet3"
+                    android:id="@+id/onglet3"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     layout="@layout/titel" >

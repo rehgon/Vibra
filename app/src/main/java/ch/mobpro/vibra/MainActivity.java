@@ -5,30 +5,29 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.media.MediaPlayer;
-import android.os.Binder;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.SoundEffectConstants;
 import android.view.View;
 import android.widget.Button;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayDeque;
+import java.io.FilenameFilter;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.ServiceConfigurationError;
 
 
 public class MainActivity extends Activity {
+
     private static ArrayList<File> musicFiles;
-    private static File musicFolder;
-    private static VibraMusicService musicService;
+    private int musicFilesIndex = 0;
+    private File musicFolder;
+    private VibraMusicService musicService;
     private static boolean mBound = false;
     private static final String MUSIC_FOLDER_NAME = "vibra_music";
 
@@ -38,8 +37,17 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
 
         createMusicDirectory();
+        loadMusicList();
 
-        debugCreateMusicFiles();
+        if (getIntent().hasExtra("songIndex")) {
+            int index = getIntent().getExtras().getInt("songIndex");
+            musicFilesIndex = index;
+
+            File song = musicFiles.get(index);
+            Log.i("play: ", song.getName());
+        }
+
+        //debugCreateMusicFiles();
     }
 
     @Override
@@ -49,16 +57,16 @@ public class MainActivity extends Activity {
         Intent intent = new Intent(this, VibraMusicService.class);
         bindService(intent, vibraServiceConnection, Context.BIND_AUTO_CREATE);
 
-        Log.i("Vibra custom Message","onStart()");
+        Log.i("Vibra custom Message", "onStart()");
     }
 
     @Override
     protected void onStop() {
         super.onStop();
 
-        Log.i("Vibra custom Message","onStop()");
+        Log.i("Vibra custom Message", "onStop()");
 
-        if(mBound) {
+        if (mBound) {
             unbindService(vibraServiceConnection);
             mBound = false;
         }
@@ -86,13 +94,50 @@ public class MainActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
+    public void loadMusicList() {
+        AsyncTask<Void, Void, ArrayList<File>> loadMusic = new AsyncTask<Void, Void, ArrayList<File>>() {
+            @Override
+            protected ArrayList<File> doInBackground(Void... params) {
+                ArrayList<File> files = new ArrayList<>();
+                if (musicFolder.exists()) {
+                    File[] fileList = musicFolder.listFiles(new FileExtensionFilter());
+                    if (fileList.length > 0) {
+                        for (File file : fileList) {
+                            files.add(file);
+                            Log.i("file: ", file.getAbsolutePath());
+                        }
+                    } else {
+                        Log.i("info :", "empty folder");
+                    }
+                } else {
+                    Log.i("error: ", "folder dos not exist " + musicFolder.getAbsolutePath());
+                }
+                return files;
+            }
+
+            @Override
+            protected void onPostExecute(ArrayList<File> files) {
+                super.onPostExecute(files);
+                musicFiles = files;
+            }
+
+            class FileExtensionFilter implements FilenameFilter {
+                public boolean accept(File dir, String name) {
+                    return (name.endsWith(".mp3") || name.endsWith(".MP3"));
+                }
+            }
+        };
+        loadMusic.execute((Void) null);
+    }
+
+
     /* Temporär zum testen: arraylist mit Music-File Objekten */
     public void debugCreateMusicFiles() {
         ArrayList<File> files = new ArrayList<>();
-        files.add(new File(musicFolder.getAbsolutePath(),"colour_haze_aquamaria.mp3"));
+        files.add(new File(musicFolder.getAbsolutePath(), "colour_haze_aquamaria.mp3"));
 
         for (File file : files) {
-            Log.i("file",file.getAbsolutePath());
+            Log.i("file", file.getAbsolutePath());
         }
 
         musicFiles = files;
@@ -103,6 +148,10 @@ public class MainActivity extends Activity {
         musicFolder.mkdirs();
     }
 
+    public static ArrayList<File> getMusicFiles() {
+        return musicFiles;
+    }
+
     private ServiceConnection vibraServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -111,9 +160,9 @@ public class MainActivity extends Activity {
             mBound = true;
             if (musicFiles != null) {
                 musicService.setPlayList(musicFiles);
-                musicService.preparePlayer(0);
+                musicService.preparePlayer(musicFilesIndex);
             } else {
-                Log.e("Vibra error","No Music Files");
+                Log.e("Vibra error", "No Music Files");
             }
         }
 
@@ -128,12 +177,17 @@ public class MainActivity extends Activity {
 
     public void startStopOnClick(View v) {
         Button playButton = (Button) v;
+        musicService.preparePlayer(musicFilesIndex);
 
         try {
-            if (musicFiles == null) { throw new FileNotFoundException("Music File is null"); }
-            if (!mBound) { throw new ServiceConfigurationError("not Bound"); }
+            if (musicFiles == null) {
+                throw new FileNotFoundException("Music File is null");
+            }
+            if (!mBound) {
+                throw new ServiceConfigurationError("not Bound");
+            }
 
-            if(!musicService.isPlaying()) {
+            if (!musicService.isPlaying()) {
                 musicService.start();
                 ((Button) v).setText("Pause");
             } else {
@@ -141,23 +195,25 @@ public class MainActivity extends Activity {
                 ((Button) v).setText("Play");
             }
         } catch (ServiceConfigurationError e) {
-            Log.e("Vibra Error",e.getMessage());
+            Log.e("Vibra Error", e.getMessage());
         } catch (FileNotFoundException e) {
-            Log.e("Vibra Error",e.getMessage());
+            Log.e("Vibra Error", e.getMessage());
         }
     }
 
     public void nextOnClick(View v) {
         musicService.preparePlayer(musicService.getTrackIndex() + 1);
-        Log.i("Player msg","next track");
+        Log.i("Player msg", "next track");
     }
 
     public void prevOnClick(View v) {
         musicService.preparePlayer(musicService.getTrackIndex() - 1);
-        Log.i("Player msg","previous track");
+        Log.i("Player msg", "previous track");
     }
 
     public void browseOnClick(View v) {
-
+        Intent intent = new Intent(this, MusicBrowserActivity.class);
+        startActivity(intent);
     }
+
 }
