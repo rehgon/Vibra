@@ -23,7 +23,7 @@ import java.util.HashMap;
  */
 public class MusicBrowserActivity extends Activity {
 
-    private static ArrayList<String> songs;
+    private static ArrayList<String> songs = new ArrayList<>();
     private ListView lv;
 
     @Override
@@ -48,7 +48,7 @@ public class MusicBrowserActivity extends Activity {
         spec3.setContent(R.id.onglet3);
         tabHost.addTab(spec3);
         //ListView
-        songs = getStringList(MainActivity.getMusicFiles());
+        songs = MainActivity.getSongs();
         lv = (ListView) findViewById(R.id.listViewTitel);
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
@@ -63,28 +63,5 @@ public class MusicBrowserActivity extends Activity {
                 startActivity(intent);
             }
         });
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    public ArrayList<String> getStringList(ArrayList<File> list) {
-        ArrayList<String> songs = new ArrayList<>();
-        for (File file : list) {
-            songs.add(file.getName().substring(0, file.getName().length() - 4));
-        }
-        return songs;
     }
 }

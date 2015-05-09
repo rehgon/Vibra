@@ -25,7 +25,8 @@ import java.util.ServiceConfigurationError;
 public class MainActivity extends Activity {
 
     private static ArrayList<File> musicFiles;
-    private int musicFilesIndex = 0;
+    private static ArrayList<String> songs;
+    private int musicFilesIndex = -1;
     private File musicFolder;
     private VibraMusicService musicService;
     private static boolean mBound = false;
@@ -45,6 +46,9 @@ public class MainActivity extends Activity {
 
             File song = musicFiles.get(index);
             Log.i("play: ", song.getName());
+
+            Intent intent = new Intent(this, VibraMusicService.class);
+            bindService(intent, vibraServiceConnection, Context.BIND_AUTO_CREATE);
         }
 
         //debugCreateMusicFiles();
@@ -54,9 +58,6 @@ public class MainActivity extends Activity {
     protected void onStart() {
         super.onStart();
 
-        Intent intent = new Intent(this, VibraMusicService.class);
-        bindService(intent, vibraServiceConnection, Context.BIND_AUTO_CREATE);
-
         Log.i("Vibra custom Message", "onStart()");
     }
 
@@ -65,11 +66,6 @@ public class MainActivity extends Activity {
         super.onStop();
 
         Log.i("Vibra custom Message", "onStop()");
-
-        if (mBound) {
-            unbindService(vibraServiceConnection);
-            mBound = false;
-        }
     }
 
     @Override
@@ -112,6 +108,11 @@ public class MainActivity extends Activity {
                 } else {
                     Log.i("error: ", "folder dos not exist " + musicFolder.getAbsolutePath());
                 }
+                ArrayList<String> s = new ArrayList<>();
+                for (File file : files) {
+                    s.add(file.getName().substring(0, file.getName().length() - 4));
+                }
+                songs = s;
                 return files;
             }
 
@@ -146,6 +147,10 @@ public class MainActivity extends Activity {
     public void createMusicDirectory() {
         musicFolder = new File(Environment.getExternalStorageDirectory(), MUSIC_FOLDER_NAME);
         musicFolder.mkdirs();
+    }
+
+    public static ArrayList<String> getSongs() {
+        return songs;
     }
 
     public static ArrayList<File> getMusicFiles() {
@@ -216,4 +221,12 @@ public class MainActivity extends Activity {
         startActivity(intent);
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mBound) {
+            unbindService(vibraServiceConnection);
+            mBound = false;
+        }
+    }
 }
