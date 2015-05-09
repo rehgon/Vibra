@@ -8,38 +8,114 @@
     android:paddingBottom="@dimen/activity_vertical_margin"
     tools:context=".MainActivity">
 
-    <MediaController
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/mediaController"
+    <!-- Header -->
+    <LinearLayout
+        android:id="@+id/player_header_bg"
+        android:layout_width="fill_parent"
+        android:layout_height="60dip"
+
         android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true" />
+        android:paddingLeft="5dp"
+        android:paddingRight="5dp">
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="play"
-        android:id="@+id/button"
-        android:layout_centerVertical="true"
-        android:layout_centerHorizontal="true"
-        android:onClick="startStopOnClick" />
+        <!-- Song Title -->
+        <TextView
+            android:id="@+id/songTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textColor="#04b3d2"
+            android:textSize="20dp"
+            android:paddingLeft="10dp"
+            android:textStyle="bold"
+            android:layout_marginTop="10dp"
+            android:onClick="edit"/>
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Pause"
-        android:id="@+id/button2"
-        android:layout_below="@+id/button"
-        android:layout_centerHorizontal="true"
-        android:onClick="pauseOnClick" />
+        <!-- Playlist button -->
+        <ImageButton
+            android:id="@+id/btnPlaylist"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:src="@drawable/sound"
+            android:background="@null"
+            android:onClick="browseOnClick"/>
+    </LinearLayout>
 
-    <Button
-        android:layout_width="wrap_content"
+    <!--Image oder visualizer-->
+    <LinearLayout
+        android:id="@+id/songImg"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="browse"
-        android:id="@+id/button3"
-        android:layout_below="@+id/button2"
-        android:layout_centerHorizontal="true"
-        android:onClick="browseOnClick" />
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:gravity="center"
+        android:layout_below="@id/player_header_bg">
+        <ImageView android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/img_default"/>
+    </LinearLayout>
+
+    <!-- Footer -->
+    <LinearLayout
+        android:id="@+id/player_footer_bg"
+        android:layout_width="fill_parent"
+        android:layout_height="100dp"
+        android:layout_alignParentBottom="true"
+
+        android:gravity="center">
+
+        <!-- Buttons -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+            <!-- Back Button -->
+            <ImageButton
+                android:id="@+id/btnPrevious"
+                android:src="@drawable/back"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="10dp"
+                android:background="@null"
+                android:onClick="back"/>
+            <!-- Backward Button -->
+            <ImageButton
+                android:id="@+id/btnBackward"
+                android:src="@drawable/backward"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="10dp"
+                android:background="@null"
+                android:onClick="backward"/>
+            <!-- Play Button -->
+            <ImageButton
+                android:id="@+id/btnPlayPause"
+                android:src="@drawable/play"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="10dp"
+                android:background="@null"
+                android:onClick="startStopOnClick"/>
+            <!-- Forward Button -->
+            <ImageButton
+                android:id="@+id/btnForward"
+                android:src="@drawable/forward"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="10dp"
+                android:background="@null"
+                android:onClick="forward"/>
+            <!-- Next Button -->
+            <ImageButton
+                android:id="@+id/btnNext"
+                android:src="@drawable/next"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="10dp"
+                android:background="@null"
+                android:onClick="next"/>
+        </LinearLayout>
+    </LinearLayout>
 
 </RelativeLayout>

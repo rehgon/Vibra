@@ -5,6 +5,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.media.MediaMetadataRetriever;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
@@ -14,6 +15,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -57,6 +61,12 @@ public class MainActivity extends Activity {
     @Override
     protected void onStart() {
         super.onStart();
+        if(musicFilesIndex >= 0){
+            TextView st = (TextView)findViewById(R.id.songTitle);
+            st.setText(songs.get(musicFilesIndex));
+            //MediaMetadataRetriever metaRetriver = new MediaMetadataRetriever();
+            //metaRetriver.setDataSource(musicFiles.get(musicFilesIndex).getAbsolutePath());
+        }
 
         Log.i("Vibra custom Message", "onStart()");
     }
@@ -66,28 +76,6 @@ public class MainActivity extends Activity {
         super.onStop();
 
         Log.i("Vibra custom Message", "onStop()");
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
     }
 
     public void loadMusicList() {
@@ -181,8 +169,7 @@ public class MainActivity extends Activity {
     /* onClick Events */
 
     public void startStopOnClick(View v) {
-        Button playButton = (Button) v;
-        musicService.preparePlayer(musicFilesIndex);
+        ImageButton ib = (ImageButton) v;
 
         try {
             if (musicFiles == null) {
@@ -194,10 +181,10 @@ public class MainActivity extends Activity {
 
             if (!musicService.isPlaying()) {
                 musicService.start();
-                ((Button) v).setText("Pause");
+                ib.setImageResource(R.drawable.ic_pause);
             } else {
                 musicService.pause();
-                ((Button) v).setText("Play");
+                ib.setImageResource(R.drawable.play);
             }
         } catch (ServiceConfigurationError e) {
             Log.e("Vibra Error", e.getMessage());
@@ -228,5 +215,25 @@ public class MainActivity extends Activity {
             unbindService(vibraServiceConnection);
             mBound = false;
         }
+    }
+
+    public void back(View view) {
+        //ToDo
+    }
+
+    public void backward(View view) {
+        //ToDO
+    }
+
+    public void forward(View view) {
+        //ToDo
+    }
+
+    public void next(View view) {
+        //ToDo
+    }
+
+    public void edit(View view) {
+        Log.i("edit", "test");
     }
 }
