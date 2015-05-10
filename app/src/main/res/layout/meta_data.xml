@@ -1,0 +1,93 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+
+    <TextView
+        android:id="@+id/album_art_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="20dp"
+        android:layout_marginTop="60dp"
+        android:textSize="18dp"
+        android:singleLine="true" />
+
+    <ImageView
+        android:id="@+id/album_art"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:layout_alignParentRight="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginRight="10dp" />
+
+    <TextView
+        android:id="@+id/album_name_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/album_art_text"
+        android:layout_below="@+id/album_art"
+        android:layout_marginTop="24dp"
+        android:text="Album :"
+        android:textSize="18dp" />
+
+    <TextView
+        android:id="@+id/artist_name_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/album_name_text"
+        android:layout_below="@+id/album_name_text"
+        android:layout_marginTop="43dp"
+        android:text="Artist :"
+        android:textSize="18dp" />
+
+    <TextView
+        android:id="@+id/song_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/artist_name_text"
+        android:layout_below="@+id/artist_name_text"
+        android:layout_marginTop="39dp"
+        android:text="Song :"
+        android:textSize="18dp" />
+
+    <EditText
+        android:id="@+id/song"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="null"
+        android:textSize="18dp"
+        android:layout_alignBottom="@+id/song_text"
+        android:layout_alignStart="@+id/artist"
+        android:onClick="editSongName" />
+
+
+    <EditText
+        android:id="@+id/album"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/artist_name_text"
+        android:layout_alignLeft="@+id/album_art"
+        android:text="null"
+        android:textSize="18dp"
+        android:onClick="editAlbumName"/>
+
+    <EditText
+        android:id="@+id/artist"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/song_text"
+        android:layout_alignLeft="@+id/album"
+        android:text="null"
+        android:textSize="18dp"
+        android:onClick="editArtistName"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Save"
+        android:id="@+id/save"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="62dp"
+        android:onClick="saveMetaData" />
+
+</RelativeLayout>

@@ -27,6 +27,12 @@
 
         </activity>
 
+        <activity
+            android:name=".MetaDataActivity"
+            android:label="Meta data">
+
+        </activity>
+
         <service android:name=".VibraMusicService" />
     </application>
 
