@@ -42,7 +42,7 @@
     </LinearLayout>
 
     <!--Image oder visualizer-->
-    <LinearLayout
+    <!--<LinearLayout
         android:id="@+id/songImg"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
@@ -53,7 +53,7 @@
         <ImageView android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/img_default"/>
-    </LinearLayout>
+    </LinearLayout>-->
 
     <!-- Footer -->
     <LinearLayout
@@ -61,7 +61,6 @@
         android:layout_width="fill_parent"
         android:layout_height="100dp"
         android:layout_alignParentBottom="true"
-
         android:gravity="center">
 
         <!-- Buttons -->
@@ -118,4 +117,27 @@
         </LinearLayout>
     </LinearLayout>
 
+    <!-- visualizer -->
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/player_header_bg"
+        android:layout_above="@id/player_footer_bg"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:orientation="vertical"
+        android:paddingLeft="@dimen/activity_horizontal_margin"
+        android:paddingRight="@dimen/activity_horizontal_margin"
+        tools:context="com.example.androidaudiovisualizer.MainActivity"
+        android:id="@+id/player_content_bg">
+
+        <ch.mobpro.vibra.VisualizerView
+            android:id="@+id/visualizerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/img_default"
+            android:longClickable="false" />
+
+    </LinearLayout>
 </RelativeLayout>

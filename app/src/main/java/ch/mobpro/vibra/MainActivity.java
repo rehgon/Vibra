@@ -5,7 +5,10 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.media.AudioManager;
 import android.media.MediaMetadataRetriever;
+import android.media.MediaPlayer;
+import android.media.audiofx.Visualizer;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
@@ -36,6 +39,9 @@ public class MainActivity extends Activity {
     private static boolean mBound = false;
     private static final String MUSIC_FOLDER_NAME = "vibra_music";
 
+    private VisualizerView mVisualizerView;
+    private Visualizer mVisualizer;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,7 +61,8 @@ public class MainActivity extends Activity {
             bindService(intent, vibraServiceConnection, Context.BIND_AUTO_CREATE);
         }
 
-        //debugCreateMusicFiles();
+        //init visualizerView
+        mVisualizerView = (VisualizerView) findViewById(R.id.visualizerView);
     }
 
     @Override
@@ -119,22 +126,11 @@ public class MainActivity extends Activity {
         loadMusic.execute((Void) null);
     }
 
-
-    /* Temporär zum testen: arraylist mit Music-File Objekten */
-    public void debugCreateMusicFiles() {
-        ArrayList<File> files = new ArrayList<>();
-        files.add(new File(musicFolder.getAbsolutePath(), "colour_haze_aquamaria.mp3"));
-
-        for (File file : files) {
-            Log.i("file", file.getAbsolutePath());
-        }
-
-        musicFiles = files;
-    }
-
-    public void createMusicDirectory() {
+    private void createMusicDirectory() {
         musicFolder = new File(Environment.getExternalStorageDirectory(), MUSIC_FOLDER_NAME);
         musicFolder.mkdirs();
+
+        Log.i("Vibra Msg","Music Folder created");
     }
 
     public static ArrayList<String> getSongs() {
@@ -157,6 +153,9 @@ public class MainActivity extends Activity {
             } else {
                 Log.e("Vibra error", "No Music Files");
             }
+
+            //init visualizer
+            initAudio();
         }
 
         @Override
@@ -230,10 +229,56 @@ public class MainActivity extends Activity {
     }
 
     public void next(View view) {
-        //ToDo
+        Intent intent = new Intent(this, VisualizerView.class);
+        startActivity(intent);
     }
 
     public void edit(View view) {
         Log.i("edit", "test");
+    }
+
+
+    /*
+        Visualizer Klassen
+     */
+
+    private void initAudio() {
+        setVolumeControlStream(AudioManager.STREAM_MUSIC);
+
+        setupVisualizerFxAndUI();
+        // Make sure the visualizer is enabled only when you actually want to
+        // receive data, and
+        // when it makes sense to receive data.
+        mVisualizer.setEnabled(true);
+        // When the stream ends, we don't need to collect any more data. We
+        // don't do this in
+        // setupVisualizerFxAndUI because we likely want to have more,
+        // non-Visualizer related code
+        // in this callback.
+        musicService.getMediaPlayer()
+                .setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                    public void onCompletion(MediaPlayer mediaPlayer) {
+                        mVisualizer.setEnabled(false);
+                    }
+                });
+        musicService.getMediaPlayer().start();
+    }
+
+    private void setupVisualizerFxAndUI() {
+
+        // Create the Visualizer object and attach it to our media player.
+        mVisualizer = new Visualizer(musicService.getMediaPlayer().getAudioSessionId());
+        mVisualizer.setCaptureSize(Visualizer.getCaptureSizeRange()[1]);
+        mVisualizer.setDataCaptureListener(
+                new Visualizer.OnDataCaptureListener() {
+                    public void onWaveFormDataCapture(Visualizer visualizer,
+                                                      byte[] bytes, int samplingRate) {
+                        mVisualizerView.updateVisualizer(bytes);
+                    }
+
+                    public void onFftDataCapture(Visualizer visualizer,
+                                                 byte[] bytes, int samplingRate) {
+                    }
+                }, Visualizer.getMaxCaptureRate() / 2, true, false);
     }
 }

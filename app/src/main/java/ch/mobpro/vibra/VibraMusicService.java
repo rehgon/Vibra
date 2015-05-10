@@ -1,9 +1,12 @@
 package ch.mobpro.vibra;
 
+import android.app.Activity;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.media.audiofx.Visualizer;
 import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.IBinder;
@@ -25,6 +28,10 @@ public class VibraMusicService extends Service  implements MediaPlayer.OnComplet
     private ArrayList<File> playList;
     int current_index = 0;
 
+    public VibraMusicService() {
+        mp = new MediaPlayer();
+    }
+
     public class VibraServiceBinder extends Binder {
         public VibraMusicService getService() {
             return VibraMusicService.this;
@@ -34,6 +41,10 @@ public class VibraMusicService extends Service  implements MediaPlayer.OnComplet
     @Override
     public IBinder onBind(Intent intent) {
         return mBinder;
+    }
+
+    public MediaPlayer getMediaPlayer() {
+        return mp;
     }
 
     public boolean isPlaying() {
@@ -93,7 +104,6 @@ public class VibraMusicService extends Service  implements MediaPlayer.OnComplet
             File musicFile = musicFiles[0];
 
             try {
-                mp = new MediaPlayer();
                 mp.setDataSource(musicFile.getAbsolutePath());
                 mp.prepare();
 
@@ -113,6 +123,7 @@ public class VibraMusicService extends Service  implements MediaPlayer.OnComplet
 
     @Override
     public void onCompletion(MediaPlayer mp) {
+        Log.i("vibra musicservice","Song completed");
         preparePlayer(++current_index % playList.size());
     }
 
