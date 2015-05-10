@@ -3,28 +3,19 @@ package ch.mobpro.vibra;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
-import android.widget.ListAdapter;
 import android.widget.ListView;
-import android.widget.SimpleAdapter;
 import android.widget.TabHost;
-import android.widget.TextView;
 
-import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 /**
  * Created by Matthias on 04.05.2015.
  */
 public class MusicBrowserActivity extends Activity {
-
-    private static ArrayList<String> songs = new ArrayList<>();
-    private ListView lv;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,8 +39,8 @@ public class MusicBrowserActivity extends Activity {
         spec3.setContent(R.id.onglet3);
         tabHost.addTab(spec3);
         //ListView
-        songs = MainActivity.getSongs();
-        lv = (ListView) findViewById(R.id.listViewTitel);
+        ArrayList<String> songs = MainActivity.getSongs();
+        ListView lv = (ListView) findViewById(R.id.listViewTitel);
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
                 android.R.layout.simple_list_item_1, android.R.id.text1, songs);
@@ -58,7 +49,7 @@ public class MusicBrowserActivity extends Activity {
         lv.setOnItemClickListener(new OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent intent = new Intent(getApplicationContext(),MainActivity.class);
+                Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                 intent.putExtra("songIndex", position);
                 startActivity(intent);
             }

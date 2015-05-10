@@ -1,22 +1,15 @@
 package ch.mobpro.vibra;
 
-import android.app.Activity;
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
-import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.media.audiofx.Visualizer;
 import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
-import android.widget.MediaController.MediaPlayerControl;
 
 import java.io.File;
-import java.io.FileDescriptor;
 import java.util.ArrayList;
-import java.util.Collection;
 
 /**
  * Created by remo on 04.05.2015.
@@ -97,7 +90,6 @@ public class VibraMusicService extends Service  implements MediaPlayer.OnComplet
     }
 
     private final class VibraPlayMusicTask extends AsyncTask<File, Void, Void> {
-        private boolean running = true;
 
         @Override
         protected Void doInBackground(File... musicFiles) {
