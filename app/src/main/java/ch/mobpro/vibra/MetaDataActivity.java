@@ -80,5 +80,6 @@ public class MetaDataActivity extends Activity {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        super.onBackPressed();
     }
 }
