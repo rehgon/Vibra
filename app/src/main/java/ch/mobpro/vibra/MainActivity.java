@@ -63,8 +63,8 @@ public class MainActivity extends Activity {
     @Override
     protected void onStart() {
         super.onStart();
-        if(musicFilesIndex >= 0){
-            TextView st = (TextView)findViewById(R.id.songTitle);
+        if (musicFilesIndex >= 0) {
+            TextView st = (TextView) findViewById(R.id.songTitle);
             st.setText(songs.get(musicFilesIndex));
             //MediaMetadataRetriever metaRetriver = new MediaMetadataRetriever();
             //metaRetriver.setDataSource(musicFiles.get(musicFilesIndex).getAbsolutePath());
@@ -123,7 +123,7 @@ public class MainActivity extends Activity {
 
     private void createMusicDirectory() {
         musicFolder = new File(Environment.getExternalStorageDirectory(), MUSIC_FOLDER_NAME);
-        Log.i("Vibra Msg","Music Folder created");
+        Log.i("Vibra Msg", "Music Folder created");
     }
 
     public static ArrayList<String> getSongs() {
@@ -153,8 +153,10 @@ public class MainActivity extends Activity {
         }
     };
 
-
-    /* onClick Events */
+    public static ArrayList<File> getMusicFiles() {
+        return musicFiles;
+    }
+/* onClick Events */
 
     public void startStopOnClick(View v) {
         ImageButton ib = (ImageButton) v;
@@ -214,7 +216,9 @@ public class MainActivity extends Activity {
     }
 
     public void edit(View view) {
-        Log.i("edit", "test");
+        Intent intent = new Intent(getApplicationContext(), MetaDataActivity.class);
+        intent.putExtra("index", musicFilesIndex);
+        startActivity(intent);
     }
 
 
@@ -228,11 +232,11 @@ public class MainActivity extends Activity {
         setupVisualizerFxAndUI();
         mVisualizer.setEnabled(true);
         musicService.getMediaPlayer().setOnCompletionListener(
-            new MediaPlayer.OnCompletionListener() {
-                public void onCompletion(MediaPlayer mediaPlayer) {
-                    mVisualizer.setEnabled(false);
+                new MediaPlayer.OnCompletionListener() {
+                    public void onCompletion(MediaPlayer mediaPlayer) {
+                        mVisualizer.setEnabled(false);
+                    }
                 }
-            }
         );
         musicService.getMediaPlayer().start();
     }
@@ -242,16 +246,16 @@ public class MainActivity extends Activity {
         mVisualizer = new Visualizer(musicService.getMediaPlayer().getAudioSessionId());
         mVisualizer.setCaptureSize(Visualizer.getCaptureSizeRange()[1]);
         mVisualizer.setDataCaptureListener(
-            new Visualizer.OnDataCaptureListener() {
-                public void onWaveFormDataCapture(Visualizer visualizer, byte[] bytes, int samplingRate) {
-                    mVisualizerView.updateVisualizer(bytes);
-                }
+                new Visualizer.OnDataCaptureListener() {
+                    public void onWaveFormDataCapture(Visualizer visualizer, byte[] bytes, int samplingRate) {
+                        mVisualizerView.updateVisualizer(bytes);
+                    }
 
-                public void onFftDataCapture(Visualizer visualizer,
-                                             byte[] bytes, int samplingRate) {
+                    public void onFftDataCapture(Visualizer visualizer,
+                                                 byte[] bytes, int samplingRate) {
+                    }
                 }
-            }
-            ,Visualizer.getMaxCaptureRate() / 2, true, false
+                , Visualizer.getMaxCaptureRate() / 2, true, false
         );
     }
 }
