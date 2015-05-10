@@ -134,10 +134,40 @@
 
         <ch.mobpro.vibra.VisualizerView
             android:id="@+id/visualizerView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_width="250dp"
+            android:layout_height="250dp"
             android:background="@drawable/img_default"
-            android:longClickable="false" />
+            android:longClickable="false"
+            android:layout_gravity="center_horizontal" />
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent">
+
+            <TextView
+                android:layout_width="40dp"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:text="00:00"
+                android:id="@+id/time_current"
+                android:layout_gravity="center_vertical" />
+
+            <SeekBar
+                android:layout_width="220dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/seekBar"
+                android:layout_gravity="center"
+                android:indeterminate="false" />
+
+            <TextView
+                android:layout_width="40dp"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:text="00:00"
+                android:id="@+id/time_length"
+                android:layout_gravity="center_vertical" />
+        </LinearLayout>
 
     </LinearLayout>
 </RelativeLayout>

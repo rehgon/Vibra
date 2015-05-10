@@ -7,6 +7,7 @@ import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
+import android.widget.SeekBar;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -16,10 +17,10 @@ import java.util.ArrayList;
  */
 public class VibraMusicService extends Service  implements MediaPlayer.OnCompletionListener {
     private IBinder mBinder = new VibraServiceBinder();
-    private static MediaPlayer mp = new MediaPlayer();
-    private VibraPlayMusicTask task;
+    private static MediaPlayer mp;
     private ArrayList<File> playList;
     int current_index = 0;
+    SeekBar seekBar;
 
     public VibraMusicService() {
         mp = new MediaPlayer();
@@ -40,10 +41,6 @@ public class VibraMusicService extends Service  implements MediaPlayer.OnComplet
         return mp;
     }
 
-    public boolean isPlaying() {
-        return mp.isPlaying();
-    }
-
     public void start() {
         if (!isPlaying()) {
             mp.start();
@@ -54,6 +51,14 @@ public class VibraMusicService extends Service  implements MediaPlayer.OnComplet
         if (isPlaying()) {
             mp.pause();
         }
+    }
+
+    public boolean isPlaying() {
+        return mp.isPlaying();
+    }
+
+    public int getDuration() {
+        return mp.getDuration();
     }
 
     public void setPlayList(ArrayList<File> musicFiles) {
@@ -68,48 +73,17 @@ public class VibraMusicService extends Service  implements MediaPlayer.OnComplet
     public void preparePlayer(int trackNr) {
         current_index = trackNr % playList.size();
 
-        try {
-            if (task == null) {
-                task = new VibraPlayMusicTask();
-            } else {
-                task.cancel(true);
-            }
+        if (mp.isPlaying()) {
+            mp.release();
+        }
 
-            task.execute(playList.get(current_index));
+        try {
+            mp.setDataSource(playList.get(current_index).getAbsolutePath());
+            mp.prepare();
         } catch (ArrayIndexOutOfBoundsException e ) {
             Log.e("Vibra Service Error","Track index out of bounds");
         } catch (Exception e) {
             e.printStackTrace();
-        }
-    }
-
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        new VibraPlayMusicTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-        return START_STICKY;
-    }
-
-    private final class VibraPlayMusicTask extends AsyncTask<File, Void, Void> {
-
-        @Override
-        protected Void doInBackground(File... musicFiles) {
-            File musicFile = musicFiles[0];
-
-            try {
-                mp.setDataSource(musicFile.getAbsolutePath());
-                mp.prepare();
-
-                Log.i("progress", mp.getCurrentPosition() + "");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            return null;
-        }
-
-        @Override
-        protected void onCancelled() {
-            mp.stop();
         }
     }
 

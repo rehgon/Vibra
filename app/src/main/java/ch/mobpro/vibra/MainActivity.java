@@ -15,6 +15,7 @@ import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import java.io.File;
@@ -22,6 +23,7 @@ import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.ServiceConfigurationError;
+import java.util.concurrent.TimeUnit;
 
 
 public class MainActivity extends Activity {
@@ -37,28 +39,47 @@ public class MainActivity extends Activity {
     private VisualizerView mVisualizerView;
     private Visualizer mVisualizer;
 
+    private SeekBar seekBar;
+    private TextView currentTimeText;
+    private ImageButton playButton;
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        seekBar = (SeekBar) findViewById(R.id.seekBar);
+        currentTimeText = (TextView) findViewById(R.id.time_current);
+        playButton = (ImageButton) findViewById(R.id.btnPlayPause);
+
         createMusicDirectory();
         loadMusicList();
+
+        Intent intent = new Intent(this, VibraMusicService.class);
+
+        if (musicService != null && musicService.isPlaying()) {
+            musicService.stopService(intent);
+        }
 
         if (getIntent().hasExtra("songIndex")) {
             int index = getIntent().getExtras().getInt("songIndex");
             musicFilesIndex = index;
 
+            Log.w("load index: ", index+"");
             File song = musicFiles.get(index);
-            Log.i("play: ", song.getName());
+            Log.w("play: ", song.getName());
 
-            Intent intent = new Intent(this, VibraMusicService.class);
+
             bindService(intent, vibraServiceConnection, Context.BIND_AUTO_CREATE);
         }
 
         //init visualizerView
         mVisualizerView = (VisualizerView) findViewById(R.id.visualizerView);
     }
+
+
 
     @Override
     protected void onStart() {
@@ -69,16 +90,16 @@ public class MainActivity extends Activity {
             //MediaMetadataRetriever metaRetriver = new MediaMetadataRetriever();
             //metaRetriver.setDataSource(musicFiles.get(musicFilesIndex).getAbsolutePath());
         }
-
-        Log.i("Vibra custom Message", "onStart()");
     }
+
+
 
     @Override
     protected void onStop() {
         super.onStop();
-
-        Log.i("Vibra custom Message", "onStop()");
     }
+
+
 
     public void loadMusicList() {
         AsyncTask<Void, Void, ArrayList<File>> loadMusic = new AsyncTask<Void, Void, ArrayList<File>>() {
@@ -121,15 +142,24 @@ public class MainActivity extends Activity {
         loadMusic.execute((Void) null);
     }
 
+
+
     private void createMusicDirectory() {
         musicFolder = new File(Environment.getExternalStorageDirectory(), MUSIC_FOLDER_NAME);
         Log.i("Vibra Msg", "Music Folder created");
     }
 
+
+
     public static ArrayList<String> getSongs() {
         return songs;
     }
 
+
+
+    /**
+     * Get MusicService Connection
+     */
     private ServiceConnection vibraServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -139,6 +169,13 @@ public class MainActivity extends Activity {
             if (musicFiles != null) {
                 musicService.setPlayList(musicFiles);
                 musicService.preparePlayer(musicFilesIndex);
+
+                //Set Duration Text
+                TextView durationText = (TextView) findViewById(R.id.time_length);
+                durationText.setText(getDurationBreakdown(musicService.getDuration()));
+
+                //init ProgressTracker
+                new VibraTrackProgressTask().execute();
             } else {
                 Log.e("Vibra error", "No Music Files");
             }
@@ -156,11 +193,14 @@ public class MainActivity extends Activity {
     public static ArrayList<File> getMusicFiles() {
         return musicFiles;
     }
-/* onClick Events */
+
+
+
+    /*
+        onClick Events
+    */
 
     public void startStopOnClick(View v) {
-        ImageButton ib = (ImageButton) v;
-
         try {
             if (musicFiles == null) {
                 throw new FileNotFoundException("Music File is null");
@@ -171,10 +211,10 @@ public class MainActivity extends Activity {
 
             if (!musicService.isPlaying()) {
                 musicService.start();
-                ib.setImageResource(R.drawable.ic_pause);
+                playButton.setImageResource(R.drawable.ic_pause);
             } else {
                 musicService.pause();
-                ib.setImageResource(R.drawable.play);
+                playButton.setImageResource(R.drawable.play);
             }
         } catch (ServiceConfigurationError e) {
             Log.e("Vibra Error", e.getMessage());
@@ -222,6 +262,8 @@ public class MainActivity extends Activity {
     }
 
 
+
+
     /*
         Visualizer Methoden
      */
@@ -238,7 +280,6 @@ public class MainActivity extends Activity {
                     }
                 }
         );
-        musicService.getMediaPlayer().start();
     }
 
     private void setupVisualizerFxAndUI() {
@@ -257,5 +298,72 @@ public class MainActivity extends Activity {
                 }
                 , Visualizer.getMaxCaptureRate() / 2, true, false
         );
+    }
+
+
+
+
+    /*
+        Progress Tracking
+     */
+
+    private final class VibraTrackProgressTask extends AsyncTask<Void,Void,Void> {
+        MediaPlayer mp = musicService.getMediaPlayer();
+        int currentPosition = 0;
+        int total = mp.getDuration();
+
+        @Override
+        protected void onPreExecute() {
+            seekBar.setMax(total);
+        }
+
+        @Override
+        protected Void doInBackground(Void[] params) {
+
+            //wait for MediaPlayer
+            while (!mp.isPlaying()) {
+                try {
+                    Thread.sleep(300);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            //udate tracking views
+            while (mp.isPlaying() && currentPosition < total) {
+                currentPosition= mp.getCurrentPosition();
+                seekBar.setProgress(currentPosition);
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        currentTimeText.setText(getDurationBreakdown(currentPosition));
+                    }
+                });
+            }
+            return null;
+        }
+    }
+
+
+
+    /*
+        private methods
+     */
+
+    private static String getDurationBreakdown(long millis)
+    {
+        if(millis < 0)
+        {
+            throw new IllegalArgumentException("Duration must be greater than zero!");
+        }
+
+        long minutes = TimeUnit.MILLISECONDS.toMinutes(millis);
+        millis -= TimeUnit.MINUTES.toMillis(minutes);
+        long seconds = TimeUnit.MILLISECONDS.toSeconds(millis);
+
+        String s = String.format("%02d:%02d",minutes,seconds);
+
+        return(s);
     }
 }
