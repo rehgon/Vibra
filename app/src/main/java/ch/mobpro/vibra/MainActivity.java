@@ -36,12 +36,16 @@ public class MainActivity extends Activity {
     private static boolean mBound = false;
     private static final String MUSIC_FOLDER_NAME = "vibra_music";
 
+    Intent serviceIntent;
+
     private VisualizerView mVisualizerView;
     private Visualizer mVisualizer;
 
     private SeekBar seekBar;
     private TextView currentTimeText;
     private ImageButton playButton;
+
+    private VibraTrackProgressTask progressTask;
 
 
 
@@ -53,30 +57,27 @@ public class MainActivity extends Activity {
         seekBar = (SeekBar) findViewById(R.id.seekBar);
         currentTimeText = (TextView) findViewById(R.id.time_current);
         playButton = (ImageButton) findViewById(R.id.btnPlayPause);
+        serviceIntent = new Intent(this, VibraMusicService.class);
+        mVisualizerView = (VisualizerView) findViewById(R.id.visualizerView);
 
-        createMusicDirectory();
+        //create music directory
+        musicFolder = new File(Environment.getExternalStorageDirectory(), MUSIC_FOLDER_NAME);
+
         loadMusicList();
 
-        Intent intent = new Intent(this, VibraMusicService.class);
-
+        //stop musicService if running
         if (musicService != null && musicService.isPlaying()) {
-            musicService.stopService(intent);
+            musicService.stopService(serviceIntent);
         }
 
         if (getIntent().hasExtra("songIndex")) {
             int index = getIntent().getExtras().getInt("songIndex");
             musicFilesIndex = index;
 
-            Log.w("load index: ", index+"");
-            File song = musicFiles.get(index);
-            Log.w("play: ", song.getName());
-
-
-            bindService(intent, vibraServiceConnection, Context.BIND_AUTO_CREATE);
+            bindService(serviceIntent, vibraServiceConnection, Context.BIND_AUTO_CREATE);
         }
 
-        //init visualizerView
-        mVisualizerView = (VisualizerView) findViewById(R.id.visualizerView);
+        Log.i("Vibra ------", "onCreate()");
     }
 
 
@@ -84,21 +85,60 @@ public class MainActivity extends Activity {
     @Override
     protected void onStart() {
         super.onStart();
+
         if (musicFilesIndex >= 0) {
             TextView st = (TextView) findViewById(R.id.songTitle);
-            st.setText(songs.get(musicFilesIndex));
+            if (songs != null) {
+                st.setText(songs.get(musicFilesIndex));
+            }
+
+            if (musicService != null) {
+                loadMusicList();
+                musicService.setPlayList(musicFiles);
+                musicService.preparePlayer(0);
+            }
             //MediaMetadataRetriever metaRetriver = new MediaMetadataRetriever();
             //metaRetriver.setDataSource(musicFiles.get(musicFilesIndex).getAbsolutePath());
         }
     }
 
-
-
     @Override
     protected void onStop() {
         super.onStop();
+
+        if (mVisualizer != null) {
+            mVisualizer.setEnabled(false);
+        }
+
+        if (progressTask != null) {
+            progressTask.cancel(true);
+        }
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        if (musicService != null) {
+            musicService.getMediaPlayer().stop();
+            musicService.getMediaPlayer().release();
+        }
+
+        if (progressTask != null) {
+            progressTask.cancel(true);
+        }
+
+        if (mBound) {
+            unbindService(vibraServiceConnection);
+            mBound = false;
+        }
+    }
+
+
+
+    /*
+        init methods
+     */
 
 
     public void loadMusicList() {
@@ -129,8 +169,8 @@ public class MainActivity extends Activity {
 
             @Override
             protected void onPostExecute(ArrayList<File> files) {
-                super.onPostExecute(files);
-                musicFiles = files;
+               super.onPostExecute(files);
+               musicFiles = files;
             }
 
             class FileExtensionFilter implements FilenameFilter {
@@ -141,15 +181,6 @@ public class MainActivity extends Activity {
         };
         loadMusic.execute((Void) null);
     }
-
-
-
-    private void createMusicDirectory() {
-        musicFolder = new File(Environment.getExternalStorageDirectory(), MUSIC_FOLDER_NAME);
-        Log.i("Vibra Msg", "Music Folder created");
-    }
-
-
 
     public static ArrayList<String> getSongs() {
         return songs;
@@ -173,9 +204,6 @@ public class MainActivity extends Activity {
                 //Set Duration Text
                 TextView durationText = (TextView) findViewById(R.id.time_length);
                 durationText.setText(getDurationBreakdown(musicService.getDuration()));
-
-                //init ProgressTracker
-                new VibraTrackProgressTask().execute();
             } else {
                 Log.e("Vibra error", "No Music Files");
             }
@@ -212,6 +240,10 @@ public class MainActivity extends Activity {
             if (!musicService.isPlaying()) {
                 musicService.start();
                 playButton.setImageResource(R.drawable.ic_pause);
+
+                //init ProgressTracker
+                progressTask = new VibraTrackProgressTask();
+                progressTask.execute();
             } else {
                 musicService.pause();
                 playButton.setImageResource(R.drawable.play);
@@ -226,15 +258,6 @@ public class MainActivity extends Activity {
     public void browseOnClick(View v) {
         Intent intent = new Intent(this, MusicBrowserActivity.class);
         startActivity(intent);
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (mBound) {
-            unbindService(vibraServiceConnection);
-            mBound = false;
-        }
     }
 
     public void back(View view) {
@@ -311,6 +334,7 @@ public class MainActivity extends Activity {
         MediaPlayer mp = musicService.getMediaPlayer();
         int currentPosition = 0;
         int total = mp.getDuration();
+        boolean canceled = false;
 
         @Override
         protected void onPreExecute() {
@@ -330,7 +354,11 @@ public class MainActivity extends Activity {
             }
 
             //udate tracking views
-            while (mp.isPlaying() && currentPosition < total) {
+            while ( mp.isPlaying() && currentPosition < total) {
+                if (canceled) {
+                    break;
+                }
+
                 currentPosition= mp.getCurrentPosition();
                 seekBar.setProgress(currentPosition);
 
@@ -342,6 +370,11 @@ public class MainActivity extends Activity {
                 });
             }
             return null;
+        }
+
+        @Override
+        public void onCancelled() {
+            canceled = true;
         }
     }
 

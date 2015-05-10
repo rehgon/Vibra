@@ -18,7 +18,7 @@ import java.util.ArrayList;
 public class VibraMusicService extends Service  implements MediaPlayer.OnCompletionListener {
     private IBinder mBinder = new VibraServiceBinder();
     private static MediaPlayer mp;
-    private ArrayList<File> playList;
+    private static ArrayList<File>  playList;
     int current_index = 0;
     SeekBar seekBar;
 
@@ -35,6 +35,12 @@ public class VibraMusicService extends Service  implements MediaPlayer.OnComplet
     @Override
     public IBinder onBind(Intent intent) {
         return mBinder;
+    }
+
+    protected void onStart() {
+        if (mp == null) {
+            mp = new MediaPlayer();
+        }
     }
 
     public MediaPlayer getMediaPlayer() {
@@ -61,6 +67,10 @@ public class VibraMusicService extends Service  implements MediaPlayer.OnComplet
         return mp.getDuration();
     }
 
+    public static ArrayList<File> getPlayList() {
+        return VibraMusicService.playList;
+    }
+
     public void setPlayList(ArrayList<File> musicFiles) {
         playList = musicFiles;
         current_index = 0;
@@ -71,19 +81,27 @@ public class VibraMusicService extends Service  implements MediaPlayer.OnComplet
     }
 
     public void preparePlayer(int trackNr) {
-        current_index = trackNr % playList.size();
+        if (playList.size() > 0) {
 
-        if (mp.isPlaying()) {
-            mp.release();
-        }
+            current_index = trackNr % playList.size();
 
-        try {
-            mp.setDataSource(playList.get(current_index).getAbsolutePath());
-            mp.prepare();
-        } catch (ArrayIndexOutOfBoundsException e ) {
-            Log.e("Vibra Service Error","Track index out of bounds");
-        } catch (Exception e) {
-            e.printStackTrace();
+            //stop MediaPlayer
+            if (mp.isPlaying()) {
+                mp.stop();
+                mp.release();
+            }
+
+            //init MediaPlayer
+            try {
+                mp.setDataSource(playList.get(current_index).getAbsolutePath());
+                mp.prepare();
+            } catch (ArrayIndexOutOfBoundsException e) {
+                Log.e("Vibra Service Error", "Track index out of bounds");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
+            Log.e("playlist error","playlist size is zero");
         }
     }
 
